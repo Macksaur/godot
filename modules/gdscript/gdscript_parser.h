@@ -127,6 +127,7 @@ public:
 		bool is_constant = false;
 		bool is_read_only = false;
 		bool is_meta_type = false;
+		bool is_nullable = false;
 		bool is_pseudo_type = false; // For global names that can't be used standalone.
 		bool is_coroutine = false; // For function calls.
 
@@ -232,6 +233,7 @@ public:
 			is_read_only = p_other.is_read_only;
 			is_constant = p_other.is_constant;
 			is_meta_type = p_other.is_meta_type;
+			is_nullable = p_other.is_nullable;
 			is_pseudo_type = p_other.is_pseudo_type;
 			is_coroutine = p_other.is_coroutine;
 			builtin_type = p_other.builtin_type;
@@ -469,6 +471,7 @@ public:
 			OP_COMP_LESS_EQUAL,
 			OP_COMP_GREATER,
 			OP_COMP_GREATER_EQUAL,
+			OP_COALESCE,
 		};
 
 		OpType operation = OpType::OP_ADDITION;
@@ -1068,6 +1071,7 @@ public:
 		};
 
 		bool is_attribute = false;
+		bool is_nullable = false;
 
 		SubscriptNode() {
 			type = SUBSCRIPT;
@@ -1391,7 +1395,7 @@ private:
 	static HashMap<StringName, AnnotationInfo> valid_annotations;
 	List<AnnotationNode *> annotation_stack;
 
-	typedef ExpressionNode *(GDScriptParser::*ParseFunction)(ExpressionNode *p_previous_operand, bool p_can_assign);
+	typedef ExpressionNode *(GDScriptParser::*ParseFunction)(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable);
 	// Higher value means higher precedence (i.e. is evaluated first).
 	enum Precedence {
 		PREC_NONE,
@@ -1524,32 +1528,35 @@ private:
 	// Expressions.
 	ExpressionNode *parse_expression(bool p_can_assign, bool p_stop_on_assign = false);
 	ExpressionNode *parse_precedence(Precedence p_precedence, bool p_can_assign, bool p_stop_on_assign = false);
-	ExpressionNode *parse_literal(ExpressionNode *p_previous_operand, bool p_can_assign);
+	ExpressionNode *parse_literal(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
 	LiteralNode *parse_literal();
-	ExpressionNode *parse_self(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_identifier(ExpressionNode *p_previous_operand, bool p_can_assign);
+	ExpressionNode *parse_self(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_identifier(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
 	IdentifierNode *parse_identifier();
-	ExpressionNode *parse_builtin_constant(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_unary_operator(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_binary_operator(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_binary_not_in_operator(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_ternary_operator(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_assignment(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_array(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_dictionary(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_call(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_get_node(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_preload(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_grouping(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_cast(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_await(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_attribute(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_subscript(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_lambda(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_type_test(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_yield(ExpressionNode *p_previous_operand, bool p_can_assign);
-	ExpressionNode *parse_invalid_token(ExpressionNode *p_previous_operand, bool p_can_assign);
-	TypeNode *parse_type(bool p_allow_void = false);
+	ExpressionNode *parse_builtin_constant(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_unary_operator(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_binary_operator(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_coalesce_operator(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_binary_not_in_operator(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_ternary_operator(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_assignment(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_array(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_dictionary(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_call(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_get_node(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_preload(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_grouping(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_cast(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_await(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_attribute(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_subscript(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_lambda(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_type_test(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_yield(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	ExpressionNode *parse_nullable_access(ExpressionNode *p_previous_operand, bool p_can_assign, bool p_is_nullable = false);
+	TypeNode *parse_type(bool p_allow_void = false, bool p_allow_nullable = true);
+
+	void parse_nullable_type(TypeNode *p_type, bool p_allow_nullable);
 
 #ifdef TOOLS_ENABLED
 	int max_script_doc_line = INT_MAX;

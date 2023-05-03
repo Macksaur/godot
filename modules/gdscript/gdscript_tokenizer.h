@@ -66,6 +66,7 @@ public:
 			GREATER_EQUAL,
 			EQUAL_EQUAL,
 			BANG_EQUAL,
+			COALESCE,
 			// Logical
 			AND,
 			OR,
@@ -203,10 +204,14 @@ public:
 		}
 	};
 	virtual const HashMap<int, CommentData> &get_comments() const = 0;
+
 #endif // TOOLS_ENABLED
 
 	static String get_token_name(Token::Type p_token_type);
 
+	virtual String get_source() const {
+		return "<not implemented>";
+	}
 	virtual int get_cursor_line() const = 0;
 	virtual int get_cursor_column() const = 0;
 	virtual void set_cursor_position(int p_line, int p_column) = 0;
@@ -293,6 +298,7 @@ public:
 
 	const Vector<int> &get_continuation_lines() const { return continuation_lines; }
 
+	virtual String get_source() const override;
 	virtual int get_cursor_line() const override;
 	virtual int get_cursor_column() const override;
 	virtual void set_cursor_position(int p_line, int p_column) override;
@@ -306,6 +312,7 @@ public:
 	virtual const HashMap<int, CommentData> &get_comments() const override {
 		return comments;
 	}
+
 #endif // TOOLS_ENABLED
 
 	virtual Token scan() override;

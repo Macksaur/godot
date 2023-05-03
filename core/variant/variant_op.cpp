@@ -1063,6 +1063,8 @@ void Variant::_register_variant_operators() {
 
 	register_op<OperatorEvaluatorObjectHasPropertyString>(Variant::OP_IN, Variant::STRING, Variant::OBJECT);
 	register_op<OperatorEvaluatorObjectHasPropertyStringName>(Variant::OP_IN, Variant::STRING_NAME, Variant::OBJECT);
+
+	register_op<OperatorEvaluatorObjectHasPropertyStringName>(Variant::OP_IN, Variant::STRING_NAME, Variant::OBJECT);
 }
 
 #undef register_string_op
@@ -1136,7 +1138,7 @@ static const char *_op_names[Variant::OP_MAX] = {
 	"or",
 	"xor",
 	"not",
-	"in"
+	"in",
 };
 
 String Variant::get_operator_name(Operator p_op) {

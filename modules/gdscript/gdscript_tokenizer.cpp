@@ -54,6 +54,7 @@ static const char *token_names[] = {
 	">=", // GREATER_EQUAL,
 	"==", // EQUAL_EQUAL,
 	"!=", // BANG_EQUAL,
+	"??", // COALESCE,
 	// Logical
 	"and", // AND,
 	"or", // OR,
@@ -287,6 +288,10 @@ void GDScriptTokenizerText::pop_expression_indented_block() {
 	ERR_FAIL_COND(indent_stack_stack.is_empty());
 	indent_stack = indent_stack_stack.back()->get();
 	indent_stack_stack.pop_back();
+}
+
+String GDScriptTokenizerText::get_source() const {
+	return source;
 }
 
 int GDScriptTokenizerText::get_cursor_line() const {
@@ -1496,7 +1501,13 @@ GDScriptTokenizer::Token GDScriptTokenizerText::scan() {
 		case '$':
 			return make_token(Token::DOLLAR);
 		case '?':
-			return make_token(Token::QUESTION_MARK);
+			if (_peek() == '?') {
+				_advance();
+
+				return make_token(Token::COALESCE);
+			} else {
+				return make_token(Token::QUESTION_MARK);
+			}
 		case '`':
 			return make_token(Token::BACKTICK);
 
