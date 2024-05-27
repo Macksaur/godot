@@ -112,10 +112,9 @@ public:
 					return false;
 				}
 
-				bool was_freed = false;
-				Object *obj = p_variant.get_validated_object_with_check(was_freed);
+				Object *obj = p_variant.get_validated_object();
 				if (!obj) {
-					return !was_freed;
+					return true; // don't care if it's freed, behave as null
 				}
 
 				if (!ClassDB::is_parent_class(obj->get_class_name(), native_type)) {
@@ -132,10 +131,9 @@ public:
 					return false;
 				}
 
-				bool was_freed = false;
-				Object *obj = p_variant.get_validated_object_with_check(was_freed);
+				Object *obj = p_variant.get_validated_object();
 				if (!obj) {
-					return !was_freed;
+					return true; // don't care if it's freed, behave as null
 				}
 
 				Ref<Script> base = obj && obj->get_script_instance() ? obj->get_script_instance()->get_script() : nullptr;
