@@ -1,4 +1,3 @@
 func test():
-	var obj
-	obj = Node.new()
+	var obj := Node.new()
 	print(obj.free())

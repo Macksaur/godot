@@ -1,6 +1,6 @@
-GDTEST_RUNTIME_ERROR
->> SCRIPT ERROR
->> on function: test()
->> runtime/errors/use_return_value_of_void_native_method_call.gd
->> 4
->> Trying to get a return value of a method that returns "void"
+GDTEST_OK
+>> WARNING
+>> Line: 3
+>> RETURN_VALUE_VOID
+>> Cannot get return value of call to "notify_property_list_changed()" because it returns "void".
+<null>

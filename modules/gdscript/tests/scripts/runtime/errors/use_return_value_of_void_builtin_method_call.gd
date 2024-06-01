@@ -1,4 +1,3 @@
 func test():
-	var value
-	value = []
+	var value := []
 	print(value.reverse())

@@ -1,2 +1,6 @@
-GDTEST_ANALYZER_ERROR
-Cannot get return value of call to "foo()" because it returns "void".
+GDTEST_OK
+>> WARNING
+>> Line: 5
+>> RETURN_VALUE_VOID
+>> Cannot get return value of call to "foo()" because it returns "void".
+<null>

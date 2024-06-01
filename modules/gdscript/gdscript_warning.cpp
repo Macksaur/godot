@@ -34,6 +34,8 @@
 
 #ifdef DEBUG_ENABLED
 
+#include "core/config/project_settings.h"
+
 String GDScriptWarning::get_message() const {
 #define CHECK_SYMBOLS(m_amount) ERR_FAIL_COND_V(symbols.size() < m_amount, String());
 
@@ -163,6 +165,8 @@ String GDScriptWarning::get_message() const {
 		case FUNCTION_USED_AS_PROPERTY: // This is valid, returns `Callable`.
 			break;
 #endif
+		case RETURN_VALUE_VOID:
+			return vformat(R"*(Cannot get return value of call to "%s()" because it returns "void".)*", symbols[0]);
 		case WARNING_MAX:
 			break; // Can't happen, but silences warning.
 	}
@@ -240,6 +244,7 @@ String GDScriptWarning::get_name_from_code(Code p_code) {
 		"CONSTANT_USED_AS_FUNCTION",
 		"FUNCTION_USED_AS_PROPERTY",
 #endif
+		"RETURN_VALUE_VOID",
 	};
 
 	static_assert((sizeof(names) / sizeof(*names)) == WARNING_MAX, "Amount of warning types don't match the amount of warning names.");
@@ -259,6 +264,10 @@ GDScriptWarning::Code GDScriptWarning::get_code_from_name(const String &p_name) 
 	}
 
 	return WARNING_MAX;
+}
+
+GDScriptWarning::WarnLevel GDScriptWarning::get_project_warning_level(Code p_code) {
+	return (GDScriptWarning::WarnLevel)(int)GLOBAL_GET(GDScriptWarning::get_settings_path_from_code(p_code));
 }
 
 #endif // DEBUG_ENABLED

@@ -1917,7 +1917,14 @@ void GDScriptAnalyzer::resolve_assignable(GDScriptParser::AssignableNode *p_assi
 			if (!initializer_type.is_set() || initializer_type.has_no_type() || !initializer_type.is_hard_type()) {
 				push_error(vformat(R"(Cannot infer the type of "%s" %s because the value doesn't have a set type.)", p_assignable->identifier->name, p_kind), p_assignable->initializer);
 			} else if (initializer_type.kind == GDScriptParser::DataType::BUILTIN && initializer_type.builtin_type == Variant::NIL && !is_constant) {
-				push_error(vformat(R"(Cannot infer the type of "%s" %s because the value is "null".)", p_assignable->identifier->name, p_kind), p_assignable->initializer);
+#ifdef DEBUG_ENABLED
+				GDScriptWarning::WarnLevel return_value_void_warn_level = GDScriptWarning::get_project_warning_level(GDScriptWarning::RETURN_VALUE_VOID);
+				if (return_value_void_warn_level == GDScriptWarning::WarnLevel::IGNORE) {
+					parser->push_warning(p_assignable, GDScriptWarning::INFERENCE_ON_VARIANT, p_kind);
+				} else {
+					push_error(vformat(R"(Cannot infer the type of "%s" %s because the value is "null".)", p_assignable->identifier->name, p_kind), p_assignable->initializer);
+				}
+#endif
 			}
 #ifdef DEBUG_ENABLED
 			if (initializer_type.is_hard_type() && initializer_type.is_variant()) {
@@ -3182,7 +3189,12 @@ void GDScriptAnalyzer::reduce_call(GDScriptParser::CallNode *p_call, bool p_is_a
 			MethodInfo function_info = GDScriptUtilityFunctions::get_function_info(function_name);
 
 			if (!p_is_root && !p_is_await && function_info.return_val.type == Variant::NIL && ((function_info.return_val.usage & PROPERTY_USAGE_NIL_IS_VARIANT) == 0)) {
-				push_error(vformat(R"*(Cannot get return value of call to "%s()" because it returns "void".)*", function_name), p_call);
+#ifdef DEBUG_ENABLED
+				GDScriptWarning::WarnLevel return_value_void_warn_level = GDScriptWarning::get_project_warning_level(GDScriptWarning::RETURN_VALUE_VOID);
+				if (return_value_void_warn_level != GDScriptWarning::WarnLevel::IGNORE) {
+					parser->push_warning(p_call, GDScriptWarning::RETURN_VALUE_VOID, function_name);
+				}
+#endif
 			}
 
 			if (all_is_constant && GDScriptUtilityFunctions::is_function_constant(function_name)) {
@@ -3233,7 +3245,12 @@ void GDScriptAnalyzer::reduce_call(GDScriptParser::CallNode *p_call, bool p_is_a
 			MethodInfo function_info = info_from_utility_func(function_name);
 
 			if (!p_is_root && !p_is_await && function_info.return_val.type == Variant::NIL && ((function_info.return_val.usage & PROPERTY_USAGE_NIL_IS_VARIANT) == 0)) {
-				push_error(vformat(R"*(Cannot get return value of call to "%s()" because it returns "void".)*", function_name), p_call);
+#ifdef DEBUG_ENABLED
+				GDScriptWarning::WarnLevel return_value_void_warn_level = GDScriptWarning::get_project_warning_level(GDScriptWarning::RETURN_VALUE_VOID);
+				if (return_value_void_warn_level != GDScriptWarning::WarnLevel::IGNORE) {
+					parser->push_warning(p_call, GDScriptWarning::RETURN_VALUE_VOID, function_name);
+				}
+#endif
 			}
 
 			if (all_is_constant && Variant::get_utility_function_type(function_name) == Variant::UTILITY_FUNC_TYPE_MATH) {
@@ -3395,7 +3412,12 @@ void GDScriptAnalyzer::reduce_call(GDScriptParser::CallNode *p_call, bool p_is_a
 		}
 
 		if (!p_is_root && !p_is_await && return_type.is_hard_type() && return_type.kind == GDScriptParser::DataType::BUILTIN && return_type.builtin_type == Variant::NIL) {
-			push_error(vformat(R"*(Cannot get return value of call to "%s()" because it returns "void".)*", p_call->function_name), p_call);
+#ifdef DEBUG_ENABLED
+			GDScriptWarning::WarnLevel return_value_void_warn_level = GDScriptWarning::get_project_warning_level(GDScriptWarning::RETURN_VALUE_VOID);
+			if (return_value_void_warn_level != GDScriptWarning::WarnLevel::IGNORE) {
+				parser->push_warning(p_call, GDScriptWarning::RETURN_VALUE_VOID, p_call->function_name);
+			}
+#endif
 		}
 
 #ifdef DEBUG_ENABLED

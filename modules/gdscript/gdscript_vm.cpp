@@ -36,6 +36,8 @@
 
 #ifdef DEBUG_ENABLED
 
+#include "gdscript_warning.h"
+
 static bool _profile_count_as_native(const Object *p_base_obj, const StringName &p_methodname) {
 	if (!p_base_obj) {
 		return false;
@@ -1736,7 +1738,7 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 					GET_INSTRUCTION_ARG(ret, argc + 1);
 					base->callp(*methodname, (const Variant **)argptrs, argc, *ret, err);
 #ifdef DEBUG_ENABLED
-					if (ret->get_type() == Variant::NIL) {
+					if (ret->get_type() == Variant::NIL && GDScriptWarning::get_project_warning_level(GDScriptWarning::RETURN_VALUE_VOID) == GDScriptWarning::ERROR) {
 						if (base_type == Variant::OBJECT) {
 							if (base_obj) {
 								MethodBind *method = ClassDB::get_method(base_class, *methodname);

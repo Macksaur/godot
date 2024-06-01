@@ -1,4 +1,3 @@
 func test():
-	var obj
-	obj = RefCounted.new()
+	var obj := RefCounted.new()
 	print(obj.notify_property_list_changed())

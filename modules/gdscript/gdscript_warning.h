@@ -94,6 +94,7 @@ public:
 		CONSTANT_USED_AS_FUNCTION, // Function not found, but there's a constant with the same name.
 		FUNCTION_USED_AS_PROPERTY, // Property not found, but there's a function with the same name.
 #endif
+		RETURN_VALUE_VOID, // Functions that return void cannot have their return value stored.
 		WARNING_MAX,
 	};
 
@@ -146,6 +147,7 @@ public:
 		WARN, // CONSTANT_USED_AS_FUNCTION
 		WARN, // FUNCTION_USED_AS_PROPERTY
 #endif
+		IGNORE, // RETURN_VALUE_VOID
 	};
 
 	static_assert((sizeof(default_warning_levels) / sizeof(default_warning_levels[0])) == WARNING_MAX, "Amount of default levels does not match the amount of warnings.");
@@ -162,6 +164,7 @@ public:
 	static String get_name_from_code(Code p_code);
 	static String get_settings_path_from_code(Code p_code);
 	static Code get_code_from_name(const String &p_name);
+	static GDScriptWarning::WarnLevel get_project_warning_level(Code p_code);
 };
 
 #endif // DEBUG_ENABLED
