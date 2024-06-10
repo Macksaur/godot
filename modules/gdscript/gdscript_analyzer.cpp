@@ -2392,11 +2392,13 @@ void GDScriptAnalyzer::resolve_match_pattern(GDScriptParser::PatternNode *p_matc
 	if (p_match_pattern == nullptr) {
 		return;
 	}
-#define SET_NULLABLE(value)         \
-	if (p_is_nullable != nullptr) { \
-		*p_is_nullable = value;     \
-	}
-	SET_NULLABLE(false);
+
+	auto set_is_nullable = [&](bool value) {
+		if (p_is_nullable != nullptr) {
+			*p_is_nullable = value;
+		}
+	};
+
 	GDScriptParser::DataType result;
 
 	switch (p_match_pattern->pattern_type) {
@@ -2404,7 +2406,7 @@ void GDScriptAnalyzer::resolve_match_pattern(GDScriptParser::PatternNode *p_matc
 			if (p_match_pattern->literal) {
 				reduce_literal(p_match_pattern->literal);
 				result = p_match_pattern->literal->get_datatype();
-				SET_NULLABLE(p_match_pattern->literal->reduced_value.get_type() == Variant::NIL)
+				set_is_nullable(p_match_pattern->literal->reduced_value.get_type() == Variant::NIL);
 			}
 			break;
 		case GDScriptParser::PatternNode::PT_EXPRESSION:
@@ -2426,10 +2428,10 @@ void GDScriptAnalyzer::resolve_match_pattern(GDScriptParser::PatternNode *p_matc
 					}
 
 					if (is_effectively_nullable(p_match_pattern->expression)) {
-						SET_NULLABLE(true);
+						set_is_nullable(true);
 					}
 				} else {
-					SET_NULLABLE(expr->reduced_value.get_type() == Variant::NIL);
+					set_is_nullable(expr->reduced_value.get_type() == Variant::NIL);
 				}
 			}
 			break;
@@ -2440,7 +2442,7 @@ void GDScriptAnalyzer::resolve_match_pattern(GDScriptParser::PatternNode *p_matc
 				result.kind = GDScriptParser::DataType::VARIANT;
 			}
 			p_match_pattern->bind->set_datatype(result);
-			SET_NULLABLE(true);
+			set_is_nullable(true);
 #ifdef DEBUG_ENABLED
 			is_shadowing(p_match_pattern->bind, "pattern bind", true);
 			if (p_match_pattern->bind->usages == 0 && !String(p_match_pattern->bind->name).begins_with("_")) {
@@ -2474,13 +2476,11 @@ void GDScriptAnalyzer::resolve_match_pattern(GDScriptParser::PatternNode *p_matc
 		case GDScriptParser::PatternNode::PT_WILDCARD:
 		case GDScriptParser::PatternNode::PT_REST:
 			result.kind = GDScriptParser::DataType::VARIANT;
-			SET_NULLABLE(true);
+			set_is_nullable(true);
 			break;
 	}
 
 	p_match_pattern->set_datatype(result);
-
-#undef SET_NULLABLE
 }
 
 void GDScriptAnalyzer::resolve_return(GDScriptParser::ReturnNode *p_return) {
@@ -3057,9 +3057,23 @@ bool GDScriptAnalyzer::assignable_nullity_guard(GDScriptParser::ExpressionNode *
 	if (p_origin->get_datatype().has_container_element_type(0) && p_assigned_value->get_datatype().has_container_element_type(0)) {
 		GDScriptParser::DataType identifier_data_type = p_origin->get_datatype().get_container_element_type(0);
 		GDScriptParser::DataType assigned_data_type = p_assigned_value->get_datatype().get_container_element_type(0);
-		if (identifier_data_type.builtin_type != Variant::OBJECT && !identifier_data_type.is_nullable && assigned_data_type.is_nullable) {
-			push_nullable_error(R"*(Value of type "%s" cannot be assigned to a variable of type "%s".)*", {}, p_origin, p_assigned_value->get_datatype().to_string(), p_origin->get_datatype().to_string());
-			return false;
+		if (identifier_data_type.builtin_type != Variant::OBJECT) {
+			if (!identifier_data_type.is_nullable && assigned_data_type.is_nullable) {
+				push_nullable_error(R"*(Value of type "%s" cannot be assigned to a variable of type "%s".)*", {}, p_origin, p_assigned_value->get_datatype().to_string(), p_origin->get_datatype().to_string());
+				return false;
+			}
+		}
+	}
+
+	// Special case for container types, forbid assigning a nullable typed array to a non-nullable one (Like assigning an "Array[int?]" to an "Array[int]")
+	if (identifier->get_datatype().has_container_element_type(0) && p_assigned_value->get_datatype().has_container_element_type(0)) {
+		GDScriptParser::DataType identifier_data_type = identifier->get_datatype().get_container_element_type(0);
+		GDScriptParser::DataType assigned_data_type = p_assigned_value->get_datatype().get_container_element_type(0);
+		if (identifier_data_type.builtin_type != Variant::OBJECT) {
+			if (!identifier_data_type.is_nullable && assigned_data_type.is_nullable) {
+				push_nullable_error(R"*(Value of type "%s" cannot be assigned to a variable of type "%s".)*", {}, p_origin, p_assigned_value->get_datatype().to_string(), identifier->get_datatype().to_string());
+				return false;
+			}
 		}
 	}
 
@@ -3208,10 +3222,15 @@ void GDScriptAnalyzer::reduce_coalesce_op(GDScriptParser::BinaryOpNode *p_coales
 	GDScriptParser::DataType non_nullable_left_type = left_type;
 	non_nullable_left_type.is_nullable = false;
 	if (!is_type_compatible(non_nullable_left_type, right_type, false, p_coalesce_op)) {
-		push_error(vformat(R"(Invalid operands "%s" and "%s" for "??" operator.)", left_type.to_string(), right_type.to_string()), p_coalesce_op);
-	}
+		//push_error(vformat(R"(Invalid operands "%s" and "%s" for "??" operator.)", left_type.to_string(), right_type.to_string()), p_coalesce_op);
 
-	p_coalesce_op->set_datatype(left_type);
+		GDScriptParser::DataType variant_datatype;
+		variant_datatype.type_source = GDScriptParser::DataType::ANNOTATED_INFERRED;
+		variant_datatype.kind = GDScriptParser::DataType::VARIANT;
+		p_coalesce_op->set_datatype(variant_datatype);
+	} else {
+		p_coalesce_op->set_datatype(left_type);
+	}
 	p_coalesce_op->datatype.is_nullable = (left_type.is_nullable || left_type.builtin_type == Variant::OBJECT) && right_type.is_nullable;
 }
 
@@ -5674,6 +5693,15 @@ String GDScriptAnalyzer::print_expression(GDScriptParser::ExpressionNode *p_expr
 		return static_cast<GDScriptParser::IdentifierNode *>(p_expression)->name;
 	}
 
+	if (p_expression->type == GDScriptParser::Node::SUBSCRIPT) {
+		GDScriptParser::SubscriptNode *node = static_cast<GDScriptParser::SubscriptNode *>(p_expression);
+		if (node->is_attribute) {
+			return node->attribute->name;
+		}
+	}
+
+	return "<not implemented>";
+
 	DEV_ASSERT(parser->tokenizer != nullptr);
 
 	const String source = parser->tokenizer->get_source();
@@ -6237,6 +6265,7 @@ void GDScriptAnalyzer::validate_call_arg(const List<GDScriptParser::DataType> &p
 		}
 		GDScriptParser::DataType arg_type = p_call->arguments[i]->get_datatype();
 
+		bool parameter_is_incompatible = par_type.is_hard_type() && !is_type_compatible(par_type, arg_type, true);
 		bool argument_is_nullable = par_type.builtin_type != Variant::OBJECT && arg_type.is_nullable && !par_type.is_nullable && !par_type.is_variant() && is_effectively_nullable(p_call->arguments[i]);
 		if (arg_type.is_variant() || !arg_type.is_hard_type()) {
 #ifdef DEBUG_ENABLED
@@ -6246,7 +6275,7 @@ void GDScriptAnalyzer::validate_call_arg(const List<GDScriptParser::DataType> &p
 				parser->push_warning(p_call->arguments[i], GDScriptWarning::UNSAFE_CALL_ARGUMENT, itos(i + 1), "function", p_call->function_name, par_type.to_string(), arg_type.to_string_strict());
 			}
 #endif
-		} else if ((par_type.is_hard_type() && !is_type_compatible(par_type, arg_type, true)) || argument_is_nullable) {
+		} else if (parameter_is_incompatible || argument_is_nullable) {
 			if (argument_is_nullable) {
 				// We need to ensure "!par_type.is_variant()" because Variants can also be null, even though they might not have the nullable qualifier (which is the case for internal APIs)
 				push_nullable_error(
@@ -6260,7 +6289,7 @@ void GDScriptAnalyzer::validate_call_arg(const List<GDScriptParser::DataType> &p
 								   p_call->function_name, i + 1, par_type.to_string(), arg_type.to_string()),
 						p_call->arguments[i]);
 #ifdef DEBUG_ENABLED
-			} else {
+			} else if (!arg_type.is_nullable) {
 				// Supertypes are acceptable for dynamic compliance, but it's unsafe.
 				mark_node_unsafe(p_call);
 				parser->push_warning(p_call->arguments[i], GDScriptWarning::UNSAFE_CALL_ARGUMENT, itos(i + 1), "function", p_call->function_name, par_type.to_string(), arg_type.to_string_strict());

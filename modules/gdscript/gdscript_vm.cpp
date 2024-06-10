@@ -2588,8 +2588,7 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 				if (src->get_type() == Variant::NIL) {
 					should_skip = true;
 				} else if (src->get_type() == Variant::OBJECT) {
-					Object *obj = src->get_validated_object_with_check(should_skip);
-					should_skip |= obj == nullptr;
+					should_skip = src->get_validated_object() == nullptr;
 				}
 
 				if (should_skip) {
@@ -2612,8 +2611,7 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 				if (src->get_type() == Variant::NIL) {
 					should_skip = true;
 				} else if (src->get_type() == Variant::OBJECT) {
-					Object *obj = src->get_validated_object_with_check(should_skip);
-					should_skip |= obj == nullptr;
+					should_skip = src->get_validated_object() == nullptr;
 				}
 
 				if (should_skip) {
