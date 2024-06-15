@@ -1,6 +1,9 @@
-GDTEST_RUNTIME_ERROR
->> SCRIPT ERROR
->> on function: test()
->> analyzer/errors/script_freed_instance.gd
->> 10
->> Trying to assign invalid previously freed instance.
+GDTEST_OK
+>> WARNING
+>> Line: 9
+>> UNUSED_VARIABLE
+>> The local variable "ok" is declared but never used in the block. If this is intended, prefix it with an underscore: "_ok".
+>> WARNING
+>> Line: 10
+>> UNUSED_VARIABLE
+>> The local variable "bad" is declared but never used in the block. If this is intended, prefix it with an underscore: "_bad".

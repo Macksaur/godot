@@ -167,6 +167,8 @@ String GDScriptWarning::get_message() const {
 #endif
 		case RETURN_VALUE_VOID:
 			return vformat(R"*(Cannot get return value of call to "%s()" because it returns "void".)*", symbols[0]);
+		case PREVIOUSLY_FREED_INSTANCE:
+			return vformat(R"*(Cannot access "%s" because it has been previously freed.)*", symbols[0]);
 		case WARNING_MAX:
 			break; // Can't happen, but silences warning.
 	}
@@ -245,6 +247,7 @@ String GDScriptWarning::get_name_from_code(Code p_code) {
 		"FUNCTION_USED_AS_PROPERTY",
 #endif
 		"RETURN_VALUE_VOID",
+		"PREVIOUSLY_FREED_INSTANCE",
 	};
 
 	static_assert((sizeof(names) / sizeof(*names)) == WARNING_MAX, "Amount of warning types don't match the amount of warning names.");

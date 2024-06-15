@@ -837,10 +837,12 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 
 				bool was_freed = false;
 				Object *object = value->get_validated_object_with_check(was_freed);
-				if (was_freed) {
+#ifdef DEBUG_ENABLED
+				if (was_freed && GDScriptWarning::get_project_warning_level(GDScriptWarning::PREVIOUSLY_FREED_INSTANCE) == GDScriptWarning::ERROR) {
 					err_text = "Left operand of 'is' is a previously freed instance.";
 					OPCODE_BREAK;
 				}
+#endif
 
 				*dst = object && ClassDB::is_parent_class(object->get_class_name(), native_type);
 				ip += 4;
@@ -859,11 +861,12 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 
 				bool was_freed = false;
 				Object *object = value->get_validated_object_with_check(was_freed);
-				if (was_freed) {
+#ifdef DEBUG_ENABLED
+				if (was_freed && GDScriptWarning::get_project_warning_level(GDScriptWarning::PREVIOUSLY_FREED_INSTANCE) == GDScriptWarning::ERROR) {
 					err_text = "Left operand of 'is' is a previously freed instance.";
 					OPCODE_BREAK;
 				}
-
+#endif
 				bool result = false;
 				if (object && object->get_script_instance()) {
 					Script *script_ptr = object->get_script_instance()->get_script().ptr();
@@ -1402,7 +1405,7 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 				if (src->get_type() == Variant::OBJECT) {
 					bool was_freed = false;
 					Object *src_obj = src->get_validated_object_with_check(was_freed);
-					if (!src_obj && was_freed) {
+					if (!src_obj && was_freed && GDScriptWarning::get_project_warning_level(GDScriptWarning::PREVIOUSLY_FREED_INSTANCE) == GDScriptWarning::ERROR) {
 						err_text = "Trying to assign invalid previously freed instance.";
 						OPCODE_BREAK;
 					}
@@ -1439,7 +1442,7 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 				if (src->get_type() == Variant::OBJECT) {
 					bool was_freed = false;
 					Object *val_obj = src->get_validated_object_with_check(was_freed);
-					if (!val_obj && was_freed) {
+					if (!val_obj && was_freed && GDScriptWarning::get_project_warning_level(GDScriptWarning::PREVIOUSLY_FREED_INSTANCE) == GDScriptWarning::ERROR) {
 						err_text = "Trying to assign invalid previously freed instance.";
 						OPCODE_BREAK;
 					}
@@ -2722,7 +2725,7 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 				bool freed = false;
 				Object *ret_obj = r->get_validated_object_with_check(freed);
 
-				if (freed) {
+				if (freed && GDScriptWarning::get_project_warning_level(GDScriptWarning::PREVIOUSLY_FREED_INSTANCE) == GDScriptWarning::ERROR) {
 					err_text = "Trying to return a previously freed instance.";
 					OPCODE_BREAK;
 				}
@@ -2764,7 +2767,7 @@ Variant GDScriptFunction::call(GDScriptInstance *p_instance, const Variant **p_a
 				bool freed = false;
 				Object *ret_obj = r->get_validated_object_with_check(freed);
 
-				if (freed) {
+				if (freed && GDScriptWarning::get_project_warning_level(GDScriptWarning::PREVIOUSLY_FREED_INSTANCE) == GDScriptWarning::ERROR) {
 					err_text = "Trying to return a previously freed instance.";
 					OPCODE_BREAK;
 				}
