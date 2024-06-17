@@ -580,7 +580,7 @@ Dictionary GDScriptSyntaxHighlighter::_get_line_syntax_highlighting_impl(int p_l
 
 		if (!in_node_ref && in_region == -1 && (str[j] == '$' || (str[j] == '%' && !is_binary_op))) {
 			in_node_ref = true;
-		} else if (in_region != -1 || (is_a_symbol && str[j] != '/' && str[j] != '%') || (is_a_digit && j > 0 && (str[j - 1] == '$' || str[j - 1] == '/' || str[j - 1] == '%'))) {
+		} else if (in_region != -1 || (is_a_symbol && str[j] != '/' && str[j] != '%' && !(j > 0 && (str[j - 1] == '$' || str[j - 1] == '%') && str[j] == '?')) || (is_a_digit && j > 0 && (str[j - 1] == '$' || str[j - 1] == '/' || str[j - 1] == '%'))) {
 			// NodeRefs can't start with digits, so point out wrong syntax immediately.
 			in_node_ref = false;
 		}

@@ -872,6 +872,7 @@ public:
 	struct GetNodeNode : public ExpressionNode {
 		String full_path;
 		bool use_dollar = true;
+		bool allow_null = false;
 
 		GetNodeNode() {
 			type = GET_NODE;

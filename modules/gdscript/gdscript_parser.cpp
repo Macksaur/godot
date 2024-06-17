@@ -3211,7 +3211,7 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_get_node(ExpressionNode *p
 	// We want code completion after a DOLLAR even if the current code is invalid.
 	make_completion_context(COMPLETION_GET_NODE, nullptr, -1, true);
 
-	if (!current.is_node_name() && !check(GDScriptTokenizer::Token::LITERAL) && !check(GDScriptTokenizer::Token::SLASH) && !check(GDScriptTokenizer::Token::PERCENT)) {
+	if (!current.is_node_name() && !check(GDScriptTokenizer::Token::LITERAL) && !check(GDScriptTokenizer::Token::SLASH) && !check(GDScriptTokenizer::Token::PERCENT) && !check(GDScriptTokenizer::Token::QUESTION_MARK)) {
 		push_error(vformat(R"(Expected node path as string or identifier after "%s".)", previous.get_name()));
 		return nullptr;
 	}
@@ -3244,6 +3244,8 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_get_node(ExpressionNode *p
 	int context_argument = 0;
 
 	do {
+		const bool is_parsing_start = (path_state == PATH_STATE_START);
+
 		if (previous.type == GDScriptTokenizer::Token::PERCENT) {
 			if (path_state != PATH_STATE_START && path_state != PATH_STATE_SLASH) {
 				push_error(R"("%" is only valid in the beginning of a node name (either after "$" or after "/"))");
@@ -3264,6 +3266,10 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_get_node(ExpressionNode *p
 			get_node->full_path += "/";
 
 			path_state = PATH_STATE_SLASH;
+		}
+
+		if (is_parsing_start && match(GDScriptTokenizer::Token::QUESTION_MARK)) {
+			get_node->allow_null = true;
 		}
 
 		make_completion_context(COMPLETION_GET_NODE, get_node, context_argument++, true);

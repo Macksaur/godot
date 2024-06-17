@@ -747,7 +747,7 @@ GDScriptCodeGenerator::Address GDScriptCompiler::_parse_expression(CodeGen &code
 
 			GDScriptCodeGenerator::Address result = codegen.add_temporary(_gdtype_from_datatype(get_node->get_datatype(), codegen.script));
 
-			MethodBind *get_node_method = ClassDB::get_method("Node", "get_node");
+			MethodBind *get_node_method = ClassDB::get_method("Node", get_node->allow_null ? "get_node_or_null" : "get_node");
 			gen->write_call_method_bind_validated(result, GDScriptCodeGenerator::Address(GDScriptCodeGenerator::Address::SELF), get_node_method, args);
 
 			return result;
