@@ -1127,6 +1127,9 @@ GDScriptCodeGenerator::Address GDScriptCompiler::_parse_expression(CodeGen &code
 					prev_base = value;
 				}
 
+				bool nullable_lhs = false;
+				gen->write_jump_if_null(prev_base, GDScriptCodeGenerator::Address(GDScriptCodeGenerator::Address::NIL), nullable_lhs = subscript->is_nullable);
+
 				// Get value to assign.
 				GDScriptCodeGenerator::Address assigned = _parse_expression(codegen, r_error, assignment->assigned_value);
 				if (r_error) {
@@ -1149,9 +1152,9 @@ GDScriptCodeGenerator::Address GDScriptCompiler::_parse_expression(CodeGen &code
 					GDScriptCodeGenerator::Address op_result = codegen.add_temporary(_gdtype_from_datatype(assignment->get_datatype(), codegen.script));
 					GDScriptCodeGenerator::Address value = codegen.add_temporary(_gdtype_from_datatype(subscript->get_datatype(), codegen.script));
 					if (subscript->is_attribute) {
-						gen->write_get_named(value, name, prev_base, subscript->is_nullable);
+						gen->write_get_named(value, name, prev_base, false);
 					} else {
-						gen->write_get(value, key, prev_base, subscript->is_nullable);
+						gen->write_get(value, key, prev_base, false);
 					}
 					gen->write_binary_operator(op_result, assignment->variant_op, value, assigned);
 					gen->pop_temporary();
@@ -1167,6 +1170,7 @@ GDScriptCodeGenerator::Address GDScriptCompiler::_parse_expression(CodeGen &code
 				} else {
 					gen->write_set(prev_base, key, assigned);
 				}
+
 				if (key.mode == GDScriptCodeGenerator::Address::TEMPORARY) {
 					gen->pop_temporary();
 				}
@@ -1245,6 +1249,8 @@ GDScriptCodeGenerator::Address GDScriptCompiler::_parse_expression(CodeGen &code
 				if (assigned.mode == GDScriptCodeGenerator::Address::TEMPORARY) {
 					gen->pop_temporary();
 				}
+
+				gen->write_end_jump_if_null(nullable_lhs);
 			} else if (assignment->assignee->type == GDScriptParser::Node::IDENTIFIER && _is_class_member_property(codegen, static_cast<GDScriptParser::IdentifierNode *>(assignment->assignee)->name)) {
 				// Assignment to member property.
 				GDScriptCodeGenerator::Address assigned_value = _parse_expression(codegen, r_error, assignment->assigned_value);

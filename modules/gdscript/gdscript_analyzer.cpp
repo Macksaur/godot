@@ -2800,7 +2800,7 @@ void GDScriptAnalyzer::reduce_assignment(GDScriptParser::AssignmentNode *p_assig
 		return;
 	}
 
-	// Nullable access ("?." syntax) is not allowed for assignments
+#if 0 // Nullable access ("?." syntax) is not allowed for assignments
 	if (p_assignment->assignee->type == GDScriptParser::Node::SUBSCRIPT) {
 		GDScriptParser::SubscriptNode *subscript = static_cast<GDScriptParser::SubscriptNode *>(p_assignment->assignee);
 		if (subscript->is_nullable) {
@@ -2808,6 +2808,7 @@ void GDScriptAnalyzer::reduce_assignment(GDScriptParser::AssignmentNode *p_assig
 			return;
 		}
 	}
+#endif
 
 	GDScriptParser::DataType assignee_type = p_assignment->assignee->get_datatype();
 
