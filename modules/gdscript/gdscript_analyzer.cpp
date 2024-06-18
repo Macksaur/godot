@@ -5181,16 +5181,12 @@ bool GDScriptAnalyzer::subscript_nullity_guard(GDScriptParser::SubscriptNode *p_
 							inner_subscript,
 							print_expression(inner_subscript));
 				} else {
-					push_nullable_error(
-							R"*(Potentially unsafe to access nullable "%s" with %s "%s".)*",
-							{ inner_subscript->is_attribute ? inner_subscript->attribute : inner_subscript->index },
-							inner_subscript,
-							print_expression(inner_subscript), p_subscript->is_attribute ? "attribute" : "index", p_subscript->is_attribute ? String(p_subscript->attribute->name) : String(p_subscript->index->reduced_value));
+					// short-circuiting should always be safe and well defined
+					p_subscript->is_nullable = true;
+					return true;
 				}
 				return false;
-			}
-
-			if (inner_subscript->is_attribute) {
+			} else if (inner_subscript->is_attribute) {
 				GDScriptParser::IdentifierNode *identifier = inner_subscript->attribute;
 				// This identifier is being used a base to the current subscript
 				IDENTIFIER_CLAUSE
@@ -5208,7 +5204,8 @@ bool GDScriptAnalyzer::subscript_nullity_guard(GDScriptParser::SubscriptNode *p_
 								R"*(Potentially unsafe to access nullable "%s" with %s "%s".)*",
 								{},
 								index,
-								print_expression(inner_subscript), p_subscript->is_attribute ? "attribute" : "index", p_subscript->is_attribute ? String(p_subscript->attribute->name) : String(p_subscript->index->reduced_value));
+								print_expression(inner_subscript), p_subscript->is_attribute ? "attribute" : "index",
+								p_subscript->is_attribute ? String(p_subscript->attribute->name) : String(p_subscript->index->reduced_value));
 					}
 					return false;
 				} else if (!inner_subscript->base->get_datatype().is_nullable) {
@@ -5216,7 +5213,7 @@ bool GDScriptAnalyzer::subscript_nullity_guard(GDScriptParser::SubscriptNode *p_
 				}
 			}
 
-			return true;
+			return p_subscript->is_nullable;
 		} break;
 		case GDScriptParser::Node::CAST: {
 			GDScriptParser::CastNode *cast = static_cast<GDScriptParser::CastNode *>(expression);

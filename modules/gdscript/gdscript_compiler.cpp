@@ -1099,6 +1099,8 @@ GDScriptCodeGenerator::Address GDScriptCompiler::_parse_expression(CodeGen &code
 					StringName name;
 				};
 
+				int number_of_null_jumps_before = gen->get_null_jump_count();
+
 				List<ChainInfo> set_chain;
 
 				for (List<const GDScriptParser::SubscriptNode *>::Element *E = chain.back(); E; E = E->prev()) {
@@ -1113,13 +1115,13 @@ GDScriptCodeGenerator::Address GDScriptCompiler::_parse_expression(CodeGen &code
 
 					if (subscript_elem->is_attribute) {
 						name = subscript_elem->attribute->name;
-						gen->write_get_named(value, name, prev_base, subscript_elem->is_nullable);
+						gen->write_get_named(value, name, prev_base, subscript_elem->is_nullable, true);
 					} else {
 						key = _parse_expression(codegen, r_error, subscript_elem->index);
 						if (r_error) {
 							return GDScriptCodeGenerator::Address();
 						}
-						gen->write_get(value, key, prev_base, subscript_elem->is_nullable);
+						gen->write_get(value, key, prev_base, subscript_elem->is_nullable, true);
 					}
 
 					// Store base and key for setting it back later.
@@ -1152,9 +1154,9 @@ GDScriptCodeGenerator::Address GDScriptCompiler::_parse_expression(CodeGen &code
 					GDScriptCodeGenerator::Address op_result = codegen.add_temporary(_gdtype_from_datatype(assignment->get_datatype(), codegen.script));
 					GDScriptCodeGenerator::Address value = codegen.add_temporary(_gdtype_from_datatype(subscript->get_datatype(), codegen.script));
 					if (subscript->is_attribute) {
-						gen->write_get_named(value, name, prev_base, false);
+						gen->write_get_named(value, name, prev_base, false, true);
 					} else {
-						gen->write_get(value, key, prev_base, false);
+						gen->write_get(value, key, prev_base, false, true);
 					}
 					gen->write_binary_operator(op_result, assignment->variant_op, value, assigned);
 					gen->pop_temporary();
@@ -1250,7 +1252,7 @@ GDScriptCodeGenerator::Address GDScriptCompiler::_parse_expression(CodeGen &code
 					gen->pop_temporary();
 				}
 
-				gen->write_end_jump_if_null(nullable_lhs);
+				gen->write_end_jump_if_null_upto(subscript->is_nullable, number_of_null_jumps_before);
 			} else if (assignment->assignee->type == GDScriptParser::Node::IDENTIFIER && _is_class_member_property(codegen, static_cast<GDScriptParser::IdentifierNode *>(assignment->assignee)->name)) {
 				// Assignment to member property.
 				GDScriptCodeGenerator::Address assigned_value = _parse_expression(codegen, r_error, assignment->assigned_value);

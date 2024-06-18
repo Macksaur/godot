@@ -1,5 +1,5 @@
 class A:
-    var b: A?
+    var b:A?
 func test():
     var foo := A.new()
-    foo?.b.b
+    foo.b.b

@@ -809,7 +809,7 @@ void GDScriptByteCodeGenerator::write_set(const Address &p_target, const Address
 	append(p_source);
 }
 
-void GDScriptByteCodeGenerator::write_get(const Address &p_target, const Address &p_index, const Address &p_source, bool p_is_nullable) {
+void GDScriptByteCodeGenerator::write_get(const Address &p_target, const Address &p_index, const Address &p_source, bool p_is_nullable, bool p_delay_patching) {
 	write_jump_if_null(p_source, p_target, p_is_nullable);
 	if (HAS_BUILTIN_TYPE(p_source)) {
 		if (IS_BUILTIN_TYPE(p_index, Variant::INT) && Variant::get_member_validated_indexed_getter(p_source.type.builtin_type)) {
@@ -820,7 +820,7 @@ void GDScriptByteCodeGenerator::write_get(const Address &p_target, const Address
 			append(p_index);
 			append(p_target);
 			append(getter);
-			write_end_jump_if_null(p_is_nullable);
+			write_end_jump_if_null(p_is_nullable && !p_delay_patching);
 			return;
 		} else if (Variant::get_member_validated_keyed_getter(p_source.type.builtin_type)) {
 			Variant::ValidatedKeyedGetter getter = Variant::get_member_validated_keyed_getter(p_source.type.builtin_type);
@@ -829,7 +829,7 @@ void GDScriptByteCodeGenerator::write_get(const Address &p_target, const Address
 			append(p_index);
 			append(p_target);
 			append(getter);
-			write_end_jump_if_null(p_is_nullable);
+			write_end_jump_if_null(p_is_nullable && !p_delay_patching);
 			return;
 		}
 	}
@@ -837,7 +837,7 @@ void GDScriptByteCodeGenerator::write_get(const Address &p_target, const Address
 	append(p_source);
 	append(p_index);
 	append(p_target);
-	write_end_jump_if_null(p_is_nullable);
+	write_end_jump_if_null(p_is_nullable && !p_delay_patching);
 }
 
 void GDScriptByteCodeGenerator::write_set_named(const Address &p_target, const StringName &p_name, const Address &p_source) {
@@ -859,7 +859,7 @@ void GDScriptByteCodeGenerator::write_set_named(const Address &p_target, const S
 	append(p_name);
 }
 
-void GDScriptByteCodeGenerator::write_get_named(const Address &p_target, const StringName &p_name, const Address &p_source, bool p_is_nullable) {
+void GDScriptByteCodeGenerator::write_get_named(const Address &p_target, const StringName &p_name, const Address &p_source, bool p_is_nullable, bool p_delay_patching) {
 	write_jump_if_null(p_source, p_target, p_is_nullable);
 	if (HAS_BUILTIN_TYPE(p_source) && Variant::get_member_validated_getter(p_source.type.builtin_type, p_name)) {
 		Variant::ValidatedGetter getter = Variant::get_member_validated_getter(p_source.type.builtin_type, p_name);
@@ -870,14 +870,14 @@ void GDScriptByteCodeGenerator::write_get_named(const Address &p_target, const S
 #ifdef DEBUG_ENABLED
 		add_debug_name(getter_names, get_getter_pos(getter), p_name);
 #endif
-		write_end_jump_if_null(p_is_nullable);
+		write_end_jump_if_null(p_is_nullable && !p_delay_patching);
 		return;
 	}
 	append_opcode(GDScriptFunction::OPCODE_GET_NAMED);
 	append(p_source);
 	append(p_target);
 	append(p_name);
-	write_end_jump_if_null(p_is_nullable);
+	write_end_jump_if_null(p_is_nullable && !p_delay_patching);
 }
 
 void GDScriptByteCodeGenerator::write_set_member(const Address &p_value, const StringName &p_name) {
@@ -1864,6 +1864,15 @@ void GDScriptByteCodeGenerator::write_end_jump_if_null(bool p_is_nullable) {
 	}
 	patch_jump(if_null_jmp_addrs.back()->get());
 	if_null_jmp_addrs.pop_back();
+}
+
+void GDScriptByteCodeGenerator::write_end_jump_if_null_upto(bool p_is_nullable, int p_jumps_to_leave) {
+	if (!p_is_nullable) {
+		return;
+	}
+	while (if_null_jmp_addrs.size() > p_jumps_to_leave) {
+		write_end_jump_if_null(true);
+	}
 }
 
 void GDScriptByteCodeGenerator::write_exit_if_null(const Address &p_source) {

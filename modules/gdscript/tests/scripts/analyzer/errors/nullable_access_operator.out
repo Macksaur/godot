@@ -1,2 +1,2 @@
 GDTEST_ANALYZER_ERROR
-Potentially unsafe to access nullable "foo?.b" with attribute "b".
+Potentially unsafe to access nullable "b" with attribute "b".

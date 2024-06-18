@@ -91,6 +91,8 @@ public:
 #endif
 	virtual void set_initial_line(int p_line) = 0;
 
+	virtual int get_null_jump_count() = 0;
+
 	virtual void write_type_adjust(const Address &p_target, Variant::Type p_new_type) = 0;
 	virtual void write_unary_operator(const Address &p_target, Variant::Operator p_operator, const Address &p_left_operand) = 0;
 	virtual void write_binary_operator(const Address &p_target, Variant::Operator p_operator, const Address &p_left_operand, const Address &p_right_operand) = 0;
@@ -109,9 +111,9 @@ public:
 	virtual void write_ternary_false_expr(const Address &p_expr) = 0;
 	virtual void write_end_ternary() = 0;
 	virtual void write_set(const Address &p_target, const Address &p_index, const Address &p_source) = 0;
-	virtual void write_get(const Address &p_target, const Address &p_index, const Address &p_source, bool p_is_nullable = false) = 0;
+	virtual void write_get(const Address &p_target, const Address &p_index, const Address &p_source, bool p_is_nullable = false, bool p_delay_patching = false) = 0;
 	virtual void write_set_named(const Address &p_target, const StringName &p_name, const Address &p_source) = 0;
-	virtual void write_get_named(const Address &p_target, const StringName &p_name, const Address &p_source, bool p_is_nullable = false) = 0;
+	virtual void write_get_named(const Address &p_target, const StringName &p_name, const Address &p_source, bool p_is_nullable = false, bool p_delay_patching = false) = 0;
 	virtual void write_set_member(const Address &p_value, const StringName &p_name) = 0;
 	virtual void write_get_member(const Address &p_target, const StringName &p_name) = 0;
 	virtual void write_set_static_variable(const Address &p_value, const Address &p_class, int p_index) = 0;
@@ -165,6 +167,7 @@ public:
 	virtual void write_assert(const Address &p_test, const Address &p_message) = 0;
 	virtual void write_jump_if_null(const Address &p_source, const Address &p_target, bool p_is_nullable) = 0;
 	virtual void write_end_jump_if_null(bool p_is_nullable) = 0;
+	virtual void write_end_jump_if_null_upto(bool p_is_nullable, int p_jumps_to_leave) = 0;
 	virtual void write_exit_if_null(const Address &p_source) = 0;
 
 	virtual ~GDScriptCodeGenerator() {}
