@@ -89,6 +89,7 @@ static const char *token_names[] = {
 	"&=", // AMPERSAND_EQUAL,
 	"|=", // PIPE_EQUAL,
 	"^=", // CARET_EQUAL,
+	"\?\?=", // COALESCE_EQUAL,
 	// Control flow
 	"if", // IF,
 	"elif", // ELIF,
@@ -1504,7 +1505,12 @@ GDScriptTokenizer::Token GDScriptTokenizerText::scan() {
 			if (_peek() == '?') {
 				_advance();
 
-				return make_token(Token::COALESCE);
+				if (_peek() == '=') {
+					_advance();
+					return make_token(Token::COALESCE_EQUAL);
+				} else {
+					return make_token(Token::COALESCE);
+				}
 			} else {
 				return make_token(Token::QUESTION_MARK);
 			}

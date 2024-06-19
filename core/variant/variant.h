@@ -538,10 +538,10 @@ public:
 		OP_OR,
 		OP_XOR,
 		OP_NOT,
+		OP_COALESCE,
 		//containment
 		OP_IN,
 		OP_MAX
-
 	};
 
 	static String get_operator_name(Operator p_op);

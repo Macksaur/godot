@@ -428,6 +428,7 @@ public:
 			OP_BIT_AND,
 			OP_BIT_OR,
 			OP_BIT_XOR,
+			OP_COALESCE,
 		};
 
 		Operation operation = OP_NONE;

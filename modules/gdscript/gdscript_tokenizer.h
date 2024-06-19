@@ -101,6 +101,7 @@ public:
 			AMPERSAND_EQUAL,
 			PIPE_EQUAL,
 			CARET_EQUAL,
+			COALESCE_EQUAL,
 			// Control flow
 			IF,
 			ELIF,

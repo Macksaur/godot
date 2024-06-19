@@ -2880,6 +2880,10 @@ GDScriptParser::ExpressionNode *GDScriptParser::parse_assignment(ExpressionNode 
 			assignment->operation = AssignmentNode::OP_BIT_XOR;
 			assignment->variant_op = Variant::OP_BIT_XOR;
 			break;
+		case GDScriptTokenizer::Token::COALESCE_EQUAL:
+			assignment->operation = AssignmentNode::OP_COALESCE;
+			assignment->variant_op = Variant::OP_COALESCE;
+			break;
 		default:
 			break; // Unreachable.
 	}
@@ -3930,6 +3934,7 @@ GDScriptParser::ParseRule *GDScriptParser::get_rule(GDScriptTokenizer::Token::Ty
 		{ nullptr,                                          &GDScriptParser::parse_assignment,           	PREC_ASSIGNMENT }, // AMPERSAND_EQUAL,
 		{ nullptr,                                          &GDScriptParser::parse_assignment,           	PREC_ASSIGNMENT }, // PIPE_EQUAL,
 		{ nullptr,                                          &GDScriptParser::parse_assignment,           	PREC_ASSIGNMENT }, // CARET_EQUAL,
+		{ nullptr,                                          &GDScriptParser::parse_assignment,              PREC_ASSIGNMENT }, // COALESCE_EQUAL,
 		// Control flow
 		{ nullptr,                                          &GDScriptParser::parse_ternary_operator,     	PREC_TERNARY }, // IF,
 		{ nullptr,                                          nullptr,                                        PREC_NONE }, // ELIF,
@@ -5109,6 +5114,9 @@ void GDScriptParser::TreePrinter::print_assignment(AssignmentNode *p_assignment)
 			break;
 		case AssignmentNode::OP_BIT_XOR:
 			push_text("^");
+			break;
+		case AssignmentNode::OP_COALESCE:
+			push_text("??");
 			break;
 		case AssignmentNode::OP_NONE:
 			break;

@@ -644,6 +644,23 @@ void GDScriptByteCodeGenerator::write_end_coalesce_operand(const Address &p_targ
 	coalesce_op_jump.pop_back();
 }
 
+void GDScriptByteCodeGenerator::write_coalesce_jump_if_non_null(const Address &p_test_operand) {
+	// Allows us to both check if the left operand is null and if so to skip it
+	write_jump_if_null(p_test_operand, Address(), true);
+	// If here, left operand is not null
+	append_opcode(GDScriptFunction::OPCODE_JUMP);
+	coalesce_op_jump.push_back(opcodes.size());
+	append(0); // will be patched
+	// Where to jump if left operand is null
+	write_end_jump_if_null(true);
+}
+
+void GDScriptByteCodeGenerator::write_end_coalesce_jump_if_non_null() {
+	// Patch the left operand jump to allow it to skip the right operand related instructions
+	patch_jump(coalesce_op_jump.back()->get());
+	coalesce_op_jump.pop_back();
+}
+
 void GDScriptByteCodeGenerator::write_type_test(const Address &p_target, const Address &p_source, const GDScriptDataType &p_type) {
 	switch (p_type.kind) {
 		case GDScriptDataType::BUILTIN: {

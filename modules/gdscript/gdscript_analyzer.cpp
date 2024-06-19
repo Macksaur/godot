@@ -2863,7 +2863,7 @@ void GDScriptAnalyzer::reduce_assignment(GDScriptParser::AssignmentNode *p_assig
 	bool downgrades_assignee = false;
 	bool downgrades_assigned = false;
 	GDScriptParser::DataType op_type = assigned_value_type;
-	if (p_assignment->operation != GDScriptParser::AssignmentNode::OP_NONE && !op_type.is_variant()) {
+	if (p_assignment->operation != GDScriptParser::AssignmentNode::OP_NONE && p_assignment->operation != GDScriptParser::AssignmentNode::OP_COALESCE && !op_type.is_variant()) {
 		op_type = get_operation_type(p_assignment->variant_op, assignee_type, assigned_value_type, compatible, p_assignment->assigned_value);
 
 		if (assignee_is_variant) {
@@ -3012,6 +3012,10 @@ bool GDScriptAnalyzer::assignment_nullity_guard(GDScriptParser::AssignmentNode *
 			binary_op->operation = GDScriptParser::BinaryOpNode::OP_BIT_XOR;
 			binary_op->variant_op = Variant::OP_BIT_XOR;
 		} break;
+		case GDScriptParser::AssignmentNode::OP_COALESCE: {
+			binary_op->operation = GDScriptParser::BinaryOpNode::OP_COALESCE;
+			binary_op->variant_op = Variant::OP_COALESCE;
+		} break;
 	}
 	binary_op->start_line = p_assignment->start_line;
 	binary_op->end_line = p_assignment->end_line;
@@ -3124,6 +3128,7 @@ void GDScriptAnalyzer::reduce_binary_op(GDScriptParser::BinaryOpNode *p_binary_o
 		narrowed_identifiers = deduce_nullable_narrowing(p_binary_op->left_operand, false);
 		push_narrowed_nullables(narrowed_identifiers);
 	}
+
 	reduce_expression(p_binary_op->right_operand);
 
 	GDScriptParser::DataType left_type;

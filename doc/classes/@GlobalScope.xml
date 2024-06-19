@@ -3248,10 +3248,13 @@
 		<constant name="OP_NOT" value="23" enum="Variant.Operator">
 			Logical NOT operator ([code]not[/code] or [code]![/code]).
 		</constant>
-		<constant name="OP_IN" value="24" enum="Variant.Operator">
+		<constant name="OP_COALESCE" value="24" enum="Variant.Operator">
+			Null-coalescing operator ([code]??[/code]) that returns the first non-null argument.
+		</constant>
+		<constant name="OP_IN" value="25" enum="Variant.Operator">
 			Logical IN operator ([code]in[/code]).
 		</constant>
-		<constant name="OP_MAX" value="25" enum="Variant.Operator">
+		<constant name="OP_MAX" value="26" enum="Variant.Operator">
 			Represents the size of the [enum Variant.Operator] enum.
 		</constant>
 	</constants>

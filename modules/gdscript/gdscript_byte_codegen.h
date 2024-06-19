@@ -488,6 +488,8 @@ public:
 	virtual void write_binary_operator(const Address &p_target, Variant::Operator p_operator, const Address &p_left_operand, const Address &p_right_operand) override;
 	virtual void write_coalesce_operand(const Address &p_target, const Address &p_left_operand) override;
 	virtual void write_end_coalesce_operand(const Address &p_target, const Address &p_right_operand) override;
+	virtual void write_coalesce_jump_if_non_null(const Address &p_test_operand) override;
+	virtual void write_end_coalesce_jump_if_non_null() override;
 	virtual void write_type_test(const Address &p_target, const Address &p_source, const GDScriptDataType &p_type) override;
 	virtual void write_and_left_operand(const Address &p_left_operand) override;
 	virtual void write_and_right_operand(const Address &p_right_operand) override;
