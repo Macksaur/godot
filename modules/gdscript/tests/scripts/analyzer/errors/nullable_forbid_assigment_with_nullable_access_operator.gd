@@ -3,3 +3,4 @@ class A:
 func test():
     var a: A? = A.new()
     a?.b = "123"
+    print(a?.b)

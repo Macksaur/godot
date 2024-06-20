@@ -1,2 +1,2 @@
 GDTEST_ANALYZER_ERROR
-Potentially unsafe for nullable "foo.c?[0]" to call "begins_with()".
+Potentially unsafe for nullable "<not implemented>" to call "begins_with()".

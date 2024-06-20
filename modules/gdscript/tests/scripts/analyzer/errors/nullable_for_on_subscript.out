@@ -1,2 +1,2 @@
 GDTEST_ANALYZER_ERROR
-Potentially unsafe for the nullable expression "instance.arr" to be used in a for-loop.
+Potentially unsafe for the nullable expression "arr" to be used in a for-loop.

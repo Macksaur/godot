@@ -1,2 +1,2 @@
 GDTEST_ANALYZER_ERROR
-Potentially unsafe to access nullable "foobar[0]" with attribute "bar".
+Potentially unsafe to access nullable "<not implemented>" with attribute "bar".

@@ -1,2 +1,2 @@
 GDTEST_ANALYZER_ERROR
-Potentially unsafe for the nullable expression "a_instance.get_nullable_instance()?.index" to be used as an index.
+Potentially unsafe for the nullable expression "index" to be used as an index.
