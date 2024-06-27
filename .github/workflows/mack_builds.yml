@@ -1,0 +1,150 @@
+name: Mack Builds
+on:
+  workflow_call:
+
+# Global Settings
+env:
+  # Used for the cache key. Add version suffix to force clean build.
+  GODOT_BASE_BRANCH: master
+  SCONSFLAGS: verbose=yes warnings=extra module_text_server_fb_enabled=yes
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  TSAN_OPTIONS: suppressions=misc/error_suppressions/tsan.txt
+
+concurrency:
+  group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-mack
+  cancel-in-progress: true
+
+jobs:
+  build-linux:
+    runs-on: "ubuntu-20.04"
+    name: ${{ matrix.name }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux Editor w/ Mono (target=editor)
+            cache-name: mack-linux-editor-mono
+            platform: "linuxbsd"
+            target: editor
+            sconsflags: platform=linuxbsd arch=x86_64 production=yes module_mono_enabled=yes
+            bin: "./bin/godot.linuxbsd.editor.x86_64.mono"
+            build-mono: true
+            tests: false
+            artifact: true
+
+          - name: Linux Template w/ Mono (target=template_debug)
+            cache-name: mack-linux-template-debug-mono
+            platform: "linuxbsd"
+            target: template_debug
+            sconsflags: platform=linuxbsd arch=x86_64 production=yes module_mono_enabled=yes
+            build-mono: false
+            tests: false
+            artifact: true
+
+          - name: Linux Template w/ Mono (target=template_release)
+            cache-name: mack-linux-template-release-mono
+            platform: "linuxbsd"
+            target: template_release
+            sconsflags: platform=linuxbsd arch=x86_64 production=yes module_mono_enabled=yes
+            build-mono: false
+            tests: false
+            artifact: true
+
+          - name: Windows Editor w/ Mono (target=editor)
+            cache-name: mack-windows-editor-mono
+            platform: "windows"
+            target: editor
+            sconsflags: platform=windows arch=x86_64 production=yes module_mono_enabled=yes
+            bin: "./bin/godot.windows.editor.x86_64.mono"
+            build-mono: true
+            tests: false
+            artifact: true
+
+          - name: Windows Template w/ Mono (target=template_debug)
+            cache-name: mack-windows-template-debug-mono
+            platform: "windows"
+            target: template_debug
+            sconsflags: platform=windows arch=x86_64 production=yes module_mono_enabled=yes
+            build-mono: false
+            tests: false
+            artifact: true
+
+          - name: Windows Template w/ Mono (target=template_release)
+            cache-name: mack-windows-template-release-mono
+            platform: "windows"
+            target: template_release
+            sconsflags: platform=windows arch=x86_64 production=yes module_mono_enabled=yes
+            build-mono: false
+            tests: false
+            artifact: true
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Free disk space on runner
+        run: |
+          echo "Disk usage before:" && df -h
+          sudo rm -rf /usr/local/lib/android
+          echo "Disk usage after:" && df -h
+
+      - name: Setup Godot build cache
+        uses: ./.github/actions/godot-cache
+        with:
+          cache-name: ${{ matrix.cache-name }}
+        continue-on-error: true
+
+      - name: Setup Python and SCons
+        if: ${{ ! matrix.legacy-scons }}
+        uses: ./.github/actions/godot-deps
+
+      - name: Setup Python and SCons (legacy versions)
+        if: ${{ matrix.legacy-scons }}
+        uses: ./.github/actions/godot-deps
+        with:
+          # Sync with Ensure*Version in SConstruct.
+          python-version: 3.6
+          scons-version: 3.1.2
+
+      - name: Install Cross-Compilation Toolchain
+        if: ${{ matrix.platform == 'windows' }}
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install mingw-w64
+          sudo update-alternatives --set x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++-posix
+
+      - name: Setup GCC problem matcher
+        uses: ammaraskar/gcc-problem-matcher@master
+
+      - name: Compilation
+        uses: ./.github/actions/godot-build
+        with:
+          sconsflags: ${{ env.SCONSFLAGS }} ${{ matrix.sconsflags }}
+          platform: ${{ matrix.platform }}
+          target: ${{ matrix.target }}
+          tests: ${{ matrix.tests }}
+
+      - name: Generate C# glue
+        if: ${{ matrix.build-mono }}
+        run: |
+          ${{ matrix.bin }}${{ matrix.platform == 'windows' && '.exe' || '' }} --headless --generate-mono-glue ./modules/mono/glue
+
+      - name: Build .NET solutions
+        if: ${{ matrix.build-mono }}
+        run: |
+          ./modules/mono/build_scripts/build_assemblies.py --godot-output-dir=./bin --godot-platform=${{ matrix.platform }}
+
+      - name: Prepare artifact
+        if: ${{ matrix.artifact }}
+        run: |
+          strip bin/godot.*
+          chmod +x bin/godot.*
+
+      - name: Upload artifact
+        uses: ./.github/actions/upload-artifact
+        if: ${{ matrix.artifact }}
+        with:
+          name: ${{ matrix.cache-name }}

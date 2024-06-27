@@ -51,6 +51,11 @@ jobs:
     needs: static-checks
     uses: ./.github/workflows/web_builds.yml
 
+  mack-build:
+    name: Mack Builds
+    needs: static-checks
+    uses: ./.github/workflows/mack_builds.yml
+
   # Third stage: Run auxiliary tests using build artifacts from previous jobs.
 
   # Can be turned off for PRs that intentionally break compat with godot-cpp,
