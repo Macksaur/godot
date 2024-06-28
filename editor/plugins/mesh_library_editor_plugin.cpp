@@ -162,6 +162,8 @@ void MeshLibraryEditor::_import_scene_parse_node(Ref<MeshLibrary> p_library, Has
 	}
 	p_library->set_item_mesh_transform(item_id, item_mesh_transform);
 
+	p_library->set_item_render_layers(item_id, mesh_instance_node->get_layer_mask());
+
 	Vector<MeshLibrary::ShapeData> collisions;
 	for (int i = 0; i < mesh_instance_node->get_child_count(); i++) {
 		StaticBody3D *static_body_node = Object::cast_to<StaticBody3D>(mesh_instance_node->get_child(i));

@@ -8,7 +8,7 @@
 		GridMaps use a [MeshLibrary] which contains a list of tiles. Each tile is a mesh with materials plus optional collision and navigation shapes.
 		A GridMap contains a collection of cells. Each grid cell refers to a tile in the [MeshLibrary]. All cells in the map have the same dimensions.
 		Internally, a GridMap is split into a sparse collection of octants for efficient rendering and physics processing. Every octant has the same dimensions and can contain several cells.
-		[b]Note:[/b] GridMap doesn't extend [VisualInstance3D] and therefore can't be hidden or cull masked based on [member VisualInstance3D.layers]. If you make a light not affect the first layer, the whole GridMap won't be lit by the light in question.
+		[b]Note:[/b] GridMap doesn't extend [VisualInstance3D] and therefore can't be hidden or cull masked based on [member VisualInstance3D.layers]. It must instead be configured via [member rendering_layers]. If more fine grained configuration is required, each tile can be rendered according to the layers specified in the [MeshLibrary] by setting [member rendering_use_mesh_layers] to [code]true[/code]. As baked meshes don't support render layers they will always be rendered according to the [GridMap]s [member rendering_layers].
 	</description>
 	<tutorials>
 		<link title="Using gridmaps">$DOCS_URL/tutorials/3d/using_gridmaps.html</link>
@@ -103,6 +103,13 @@
 				This function considers a discretization of rotations into 24 points on unit sphere, lying along the vectors (x,y,z) with each component being either -1, 0, or 1, and returns the index (in the range from 0 to 23) of the point best representing the orientation of the object. For further details, refer to the Godot source code.
 			</description>
 		</method>
+		<method name="get_rendering_layer_mask_value" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="layer_number" type="int" />
+			<description>
+				Returns whether or not the specified layer of the [member rendering_layers] is enabled, given a [param layer_number] between 1 and 20.
+			</description>
+		</method>
 		<method name="get_used_cells" qualifiers="const">
 			<return type="Vector3i[]" />
 			<description>
@@ -179,6 +186,14 @@
 				Sets the [RID] of the navigation map this GridMap node should use for its cell baked navigation meshes.
 			</description>
 		</method>
+		<method name="set_rendering_layer_mask_value">
+			<return type="void" />
+			<param index="0" name="layer_number" type="int" />
+			<param index="1" name="value" type="bool" />
+			<description>
+				Based on [param value], enables or disables the specified layer in the [member rendering_layers], given a [param layer_number] between 1 and 20.
+			</description>
+		</method>
 	</methods>
 	<members>
 		<member name="bake_navigation" type="bool" setter="set_bake_navigation" getter="is_baking_navigation" default="false">
@@ -219,6 +234,14 @@
 		</member>
 		<member name="physics_material" type="PhysicsMaterial" setter="set_physics_material" getter="get_physics_material">
 			Overrides the default friction and bounce physics properties for the whole [GridMap].
+		</member>
+		<member name="rendering_layers" type="int" setter="set_rendering_layer_mask" getter="get_rendering_layer_mask" default="1">
+			The render layer(s) this [GridMap] is drawn on.
+			This object will only be visible for [Camera3D]s whose cull mask includes any of the render layers this [GridMap] is set to.
+		</member>
+		<member name="rendering_use_mesh_layers" type="bool" setter="set_rendering_use_mesh_layers" getter="get_rendering_use_mesh_layers" default="false">
+			If set to [code]true[/code] meshes will be rendered on their respective [member VisualInstance3D.layers] where possible. Currently this is not supported for baked meshes.
+			If set to [code]false[/code] meshes will be rendered on the [member rendering_layers] of the [GridMap].
 		</member>
 	</members>
 	<signals>
