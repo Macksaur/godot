@@ -161,7 +161,12 @@ public:
 
 	Variant make_variable_default_value(GDScriptParser::VariableNode *p_variable);
 
-	static bool check_type_compatibility(const GDScriptParser::DataType &p_target, const GDScriptParser::DataType &p_source, bool p_allow_implicit_conversion = false, const GDScriptParser::Node *p_source_node = nullptr);
+	static bool is_type_assignable_from(const GDScriptParser::DataType &p_target, const GDScriptParser::DataType &p_source, bool p_allow_implicit_conversion = false);
+	static bool is_type_base_of(const GDScriptParser::DataType &p_base, const GDScriptParser::DataType &p_derived);
+	static GDScriptParser::DataType get_meta_type_base_type(const GDScriptParser::DataType &p_type);
+	static GDScriptParser::DataType get_base_type(const GDScriptParser::DataType &p_type);
+	static GDScriptParser::DataType get_common_type(const GDScriptParser::DataType &p_left_type, const GDScriptParser::DataType &p_right_type);
+	static bool has_common_type(const GDScriptParser::DataType &p_left_type, const GDScriptParser::DataType &p_right_type);
 	static GDScriptParser::DataType type_from_metatype(const GDScriptParser::DataType &p_meta_type);
 
 	GDScriptAnalyzer(GDScriptParser *p_parser);
