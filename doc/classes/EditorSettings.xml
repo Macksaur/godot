@@ -254,6 +254,9 @@
 		<member name="docks/scene_tree/start_create_dialog_fully_expanded" type="bool" setter="" getter="">
 			If [code]true[/code], the Create dialog (Create New Node/Create New Resource) will start with all its sections expanded. Otherwise, sections will be collapsed until the user starts searching (which will automatically expand sections as needed).
 		</member>
+		<member name="docks/scene_tree/stay_in_game_view_on_node_selected" type="bool" setter="" getter="">
+			If [code]true[/code], prevents automatically switching between the 2D and 3D screens when selecting a node in the Scene tree dock, while the game is currently running in the Game View.
+		</member>
 		<member name="editors/2d/bone_color1" type="Color" setter="" getter="">
 			The "start" stop of the color gradient to use for bones in the 2D skeleton editor.
 		</member>

@@ -750,6 +750,10 @@ void GameView::get_window_layout(Ref<ConfigFile> p_layout) {
 	p_layout->set_value("GameView", "floating_window_screen", floating_window_screen);
 }
 
+bool GameView::is_currently_embedded() const {
+	return embedded_process->is_embedding_completed() || embedded_process->is_embedding_in_progress();
+}
+
 void GameView::_update_floating_window_settings() {
 	if (window_wrapper->get_window_enabled()) {
 		floating_window_rect = window_wrapper->get_window_rect();
@@ -1139,6 +1143,14 @@ void GameViewPlugin::selected_notify() {
 }
 
 #ifndef ANDROID_ENABLED
+bool GameViewPlugin::can_lose_focus_on_node_selection(Object *p_object) const {
+	if (EDITOR_GET("docks/scene_tree/stay_in_game_view_on_node_selected")) {
+		return !game_view->is_currently_embedded();
+	}
+
+	return true;
+}
+
 void GameViewPlugin::make_visible(bool p_visible) {
 	if (p_visible) {
 		window_wrapper->show();

@@ -212,6 +212,8 @@ public:
 	void set_window_layout(Ref<ConfigFile> p_layout);
 	void get_window_layout(Ref<ConfigFile> p_layout);
 
+	bool is_currently_embedded() const;
+
 	GameView(Ref<GameViewDebugger> p_debugger, WindowWrapper *p_wrapper);
 };
 
@@ -247,6 +249,8 @@ public:
 	Ref<GameViewDebugger> get_debugger() const { return debugger; }
 
 #ifndef ANDROID_ENABLED
+	virtual bool can_lose_focus_on_node_selection(Object *p_object) const override;
+
 	virtual void make_visible(bool p_visible) override;
 
 	virtual void set_window_layout(Ref<ConfigFile> p_layout) override;
