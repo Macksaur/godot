@@ -4719,6 +4719,16 @@ void ScriptEditorPlugin::edited_scene_changed() {
 	script_editor->edited_scene_changed();
 }
 
+bool ScriptEditorPlugin::can_lose_focus_on_node_selection(Object *p_object) const {
+	if (EDITOR_GET("text_editor/behavior/navigation/stay_in_script_editor_on_node_selected")) {
+		if (!script_editor->is_editor_floating() && script_editor->is_visible_in_tree()) {
+			return false;
+		}
+	}
+
+	return script_editor->is_visible_in_tree() || script_editor->can_take_away_focus();
+}
+
 ScriptEditorPlugin::ScriptEditorPlugin() {
 	ED_SHORTCUT("script_editor/reopen_closed_script", TTRC("Reopen Closed Script"), KeyModifierMask::CMD_OR_CTRL | KeyModifierMask::SHIFT | Key::T);
 	ED_SHORTCUT("script_editor/clear_recent", TTRC("Clear Recent Scripts"));

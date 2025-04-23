@@ -639,5 +639,7 @@ public:
 
 	virtual void edited_scene_changed() override;
 
+	virtual bool can_lose_focus_on_node_selection(Object *p_object) const override;
+
 	ScriptEditorPlugin();
 };

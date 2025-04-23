@@ -531,6 +531,12 @@ bool EditorPlugin::build() {
 	return success;
 }
 
+bool EditorPlugin::can_lose_focus_on_node_selection(Object *p_object) const {
+	bool success = true;
+	GDVIRTUAL_CALL(_can_lose_focus_on_node_selection, p_object, success);
+	return success;
+}
+
 void EditorPlugin::queue_save_layout() {
 	EditorNode::get_singleton()->save_editor_layout_delayed();
 }
@@ -667,6 +673,7 @@ void EditorPlugin::_bind_methods() {
 	GDVIRTUAL_BIND(_build);
 	GDVIRTUAL_BIND(_enable_plugin);
 	GDVIRTUAL_BIND(_disable_plugin);
+	GDVIRTUAL_BIND(_can_lose_focus_on_node_selection, "object")
 
 	ADD_SIGNAL(MethodInfo("scene_changed", PropertyInfo(Variant::OBJECT, "scene_root", PROPERTY_HINT_RESOURCE_TYPE, "Node")));
 	ADD_SIGNAL(MethodInfo("scene_closed", PropertyInfo(Variant::STRING, "filepath")));

@@ -135,6 +135,7 @@ protected:
 	GDVIRTUAL0R(bool, _build)
 	GDVIRTUAL0(_enable_plugin)
 	GDVIRTUAL0(_disable_plugin)
+	GDVIRTUAL1RC(bool, _can_lose_focus_on_node_selection, Object *)
 
 #ifndef DISABLE_DEPRECATED
 	Button *_add_control_to_bottom_panel_compat_88081(Control *p_control, const String &p_title);
@@ -202,6 +203,7 @@ public:
 	virtual void get_window_layout(Ref<ConfigFile> p_layout);
 	virtual void edited_scene_changed() {} // if changes are pending in editor, apply them
 	virtual bool build(); // builds with external tools. Returns true if safe to continue running scene.
+	virtual bool can_lose_focus_on_node_selection(Object *p_object) const;
 
 	EditorInterface *get_editor_interface();
 	ScriptCreateDialog *get_script_create_dialog();

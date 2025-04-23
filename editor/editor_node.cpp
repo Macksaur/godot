@@ -2530,7 +2530,7 @@ void EditorNode::push_node_item(Node *p_node) {
 	}
 }
 
-void EditorNode::push_item(Object *p_object, const String &p_property, bool p_inspector_only) {
+void EditorNode::push_item(Object *p_object, const String &p_property, bool p_inspector_only, bool p_skip_can_lose_focus_check) {
 	if (!p_object) {
 		InspectorDock::get_inspector_singleton()->edit(nullptr);
 		NodeDock::get_singleton()->set_node(nullptr);
@@ -2540,7 +2540,7 @@ void EditorNode::push_item(Object *p_object, const String &p_property, bool p_in
 		return;
 	}
 	_add_to_history(p_object, p_property, p_inspector_only);
-	_edit_current();
+	_edit_current(false, false, p_skip_can_lose_focus_check);
 }
 
 void EditorNode::edit_previous_item() {
@@ -2551,7 +2551,7 @@ void EditorNode::edit_previous_item() {
 
 void EditorNode::push_item_no_inspector(Object *p_object) {
 	_add_to_history(p_object, "", false);
-	_edit_current(false, true);
+	_edit_current(false, true, true);
 }
 
 void EditorNode::save_default_environment() {
@@ -2636,7 +2636,7 @@ void EditorNode::_add_to_history(const Object *p_object, const String &p_propert
 	}
 }
 
-void EditorNode::_edit_current(bool p_skip_foreign, bool p_skip_inspector_update) {
+void EditorNode::_edit_current(bool p_skip_foreign, bool p_skip_inspector_update, bool p_skip_can_lose_focus_check) {
 	ObjectID current_id = editor_history.get_current();
 	Object *current_obj = current_id.is_valid() ? ObjectDB::get_instance(current_id) : nullptr;
 
@@ -2670,8 +2670,6 @@ void EditorNode::_edit_current(bool p_skip_foreign, bool p_skip_inspector_update
 
 	bool is_resource = current_obj->is_class("Resource");
 	bool is_node = current_obj->is_class("Node");
-	bool stay_in_script_editor_on_node_selected = bool(EDITOR_GET("text_editor/behavior/navigation/stay_in_script_editor_on_node_selected"));
-	bool skip_main_plugin = false;
 
 	String editable_info; // None by default.
 	bool info_is_warning = false;
@@ -2723,9 +2721,6 @@ void EditorNode::_edit_current(bool p_skip_foreign, bool p_skip_inspector_update
 			SceneTreeDock::get_singleton()->set_selected(current_node);
 			SceneTreeDock::get_singleton()->set_selection({ current_node });
 			InspectorDock::get_singleton()->update(current_node);
-			if (!inspector_only && !skip_main_plugin) {
-				skip_main_plugin = stay_in_script_editor_on_node_selected && !ScriptEditor::get_singleton()->is_editor_floating() && ScriptEditor::get_singleton()->is_visible_in_tree();
-			}
 		} else {
 			NodeDock::get_singleton()->set_node(nullptr);
 			SceneTreeDock::get_singleton()->set_selected(nullptr);
@@ -2796,16 +2791,14 @@ void EditorNode::_edit_current(bool p_skip_foreign, bool p_skip_inspector_update
 		EditorPlugin *editor_plugin_screen = editor_main_screen->get_selected_plugin();
 
 		ObjectID editor_owner_id = editor_owner->get_instance_id();
-		if (main_plugin && !skip_main_plugin) {
+		if (main_plugin) {
 			// Special case if use of external editor is true.
 			Resource *current_res = Object::cast_to<Resource>(current_obj);
 			if (main_plugin->get_plugin_name() == "Script" && current_res && !current_res->is_built_in() && (bool(EDITOR_GET("text_editor/external/use_external_editor")) || overrides_external_editor(current_obj))) {
 				if (!changing_scene) {
 					main_plugin->edit(current_obj);
 				}
-			}
-
-			else if (main_plugin != editor_plugin_screen && (!ScriptEditor::get_singleton() || !ScriptEditor::get_singleton()->is_visible_in_tree() || ScriptEditor::get_singleton()->can_take_away_focus())) {
+			} else if (main_plugin != editor_plugin_screen && (p_skip_can_lose_focus_check || editor_plugin_screen->can_lose_focus_on_node_selection(current_obj))) {
 				// Unedit previous plugin.
 				editor_plugin_screen->edit(nullptr);
 				active_plugins[editor_owner_id].erase(editor_plugin_screen);

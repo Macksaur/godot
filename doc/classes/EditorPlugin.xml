@@ -25,6 +25,13 @@
 				This method must return a boolean. If this method returns [code]false[/code], the project will not run. The run is aborted immediately, so this also prevents all other plugins' [method _build] methods from running.
 			</description>
 		</method>
+		<method name="_can_lose_focus_on_node_selection" qualifiers="virtual const">
+			<return type="bool" />
+			<param index="0" name="object" type="Object" />
+			<description>
+				Override this method if your plugin should prevent the main screen plugin from changing when the user interacts with the Scene Tree dock. If you return [code]false[/code], then switching away from your plugin will be prevented. Returning [code]true[/code] is the default behavior and does not prevent switching.
+			</description>
+		</method>
 		<method name="_clear" qualifiers="virtual">
 			<return type="void" />
 			<description>

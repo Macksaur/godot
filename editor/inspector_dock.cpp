@@ -396,7 +396,7 @@ void InspectorDock::_resource_selected(const Ref<Resource> &p_res, const String 
 	}
 
 	Ref<Resource> r = p_res;
-	EditorNode::get_singleton()->push_item(r.operator->(), p_property);
+	EditorNode::get_singleton()->push_item(r.operator->(), p_property, false, true);
 }
 
 void InspectorDock::_files_moved(const String &p_old_file, const String &p_new_file) {
